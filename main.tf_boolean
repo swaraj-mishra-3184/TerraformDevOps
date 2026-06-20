@@ -1,0 +1,22 @@
+provider "aws" {
+  region = "us-east-2"
+}
+
+variable "instance_type" {
+  default = "t3.small"
+}
+
+variable "is_public" {
+	default = false
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-0741dc526e1106ae5"
+  instance_type = var.instance_type
+  associate_public_ip_address = var.is_public
+
+  tags = {
+    Name = "web-server"
+  }
+}
+

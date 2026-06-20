@@ -1,0 +1,17 @@
+provider "aws" {
+  region = "us-east-2"
+}
+
+variable "instance_count" {
+  default = 3
+}
+
+resource "aws_instance" "web" {
+  count         = var.instance_count
+  ami           = "ami-0741dc526e1106ae5"
+  instance_type = "t3.micro"
+
+  tags = {
+    Name = "web-${count.index}"
+  }
+}

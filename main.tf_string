@@ -1,0 +1,21 @@
+provider "aws" {
+  region = "us-east-2"
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-0741dc526e1106ae5"
+  instance_type = var.instance_type
+
+  tags = {
+    Name = "web-server"
+  }
+}
+
+resource "aws_iam_user" "user" {
+  name = "itw@anonymous"
+}
+
+
+variable "instance_type" {
+	default = "t3.small"
+}
