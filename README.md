@@ -1,37 +1,216 @@
+# Terraform AWS DevOps Lab
+
+A hands-on Terraform repository for learning Infrastructure as Code (IaC) using Terraform with AWS.
+
+This repository contains Terraform examples covering:
+
+* Terraform installation
+* AWS provider configuration
+* EC2 provisioning
+* IAM user creation
+* Terraform variables
+* Count
+* Lists
+* Maps
+* Objects
+* Sets
+* Terraform project structure
+* Terraform validation
+* AWS EC2 public/private IP configuration
+
+---
+
+# Repository Structure
+
+```text
+TerraformDevOps/
+│
+├── README.md
+│
+├── install_tf.setup.sh
+│
+├── tf_user_aws.setup.sh
+│
+├── main.tf
+├── main.tf_number
+├── main.tf_string
+├── main.tf_lists
+├── main.tf_map
+├── main.tf_obj
+├── main.tf_boolean
+│
+└── terraform-demo/
+    │
+    ├── provider.tf
+    ├── variables.tf
+    ├── terraform.tfvars
+    ├── main.tf
+    └── output.tf
+```
+
+---
+
+# Prerequisites
+
+Before starting, ensure you have:
+
+* AWS Account
+* AWS IAM User with programmatic access
+* Amazon Linux EC2 Instance
+* Terraform installed
+* AWS CLI configured
+* Git installed
+
+---
+
 # 1. Install Terraform
 
+Install required packages:
 
-# Install required packages
+```bash
 sudo dnf install -y dnf-plugins-core
+```
 
-# Add HashiCorp repository
+Add HashiCorp repository:
+
+```bash
 sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+```
 
-# Install Terraform
+Install Terraform:
+
+```bash
 sudo dnf install -y terraform
+```
 
-# Verify installation
+Verify:
+
+```bash
 terraform version
+```
 
+---
 
-# 2. Create an user for terraform provide sudo access to it and configure aws cli in it
+# 2. Create Terraform User and Configure AWS CLI
 
+Create terraform user:
+
+```bash
 sudo useradd -m -s /bin/bash terraform
+```
 
+Provide sudo permission:
+
+```bash
 echo "terraform ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/terraform
+
 sudo chmod 440 /etc/sudoers.d/terraform
+```
 
+Validate:
+
+```bash
 sudo visudo -c
+```
 
+Switch user:
+
+```bash
 sudo su - terraform
+```
 
+Install AWS CLI:
+
+```bash
 sudo dnf install -y awscli
+```
 
+Verify:
+
+```bash
 aws --version
+```
 
-# 3. script with no variables
+Configure AWS:
+
+```bash
+aws configure
+```
+
+---
+
+# Terraform Workflow
+
+## Initialize Terraform
+
+Downloads required providers.
+
+```bash
+terraform init
+```
+
+---
+
+## Validate Configuration
+
+Checks Terraform syntax.
+
+```bash
+terraform validate
+```
+
+Example output:
+
+```text
+Success! The configuration is valid.
+```
+
+---
+
+## Plan Infrastructure
+
+Shows changes Terraform will make.
+
+```bash
+terraform plan
+```
+
+---
+
+## Deploy Infrastructure
+
+Creates AWS resources.
+
+```bash
+terraform apply
+```
+
+---
+
+## Destroy Infrastructure
+
+Deletes resources.
+
+```bash
+terraform destroy
+```
+
+---
+
+# Terraform Examples
+
+## 1. Basic Terraform Script
+
+Creates:
+
+* EC2 Instance
+* IAM User
+
+Example:
+
+```hcl
 provider "aws" {
-    region = "us-east-2"
+  region = "us-east-2"
 }
 
 resource "aws_instance" "web" {
@@ -42,238 +221,418 @@ resource "aws_instance" "web" {
     Name = "web-server"
   }
 }
+```
 
-resource "aws_iam_user" "user" {
-  name = "itw@anonymous"
-}
+---
 
-# 4. Numbers introduced in script
-provider "aws" {
-  region = "us-east-2"
-}
+# 2. Number Variable
 
+Using `count` to create multiple instances.
+
+Example:
+
+```hcl
 variable "instance_count" {
   default = 3
 }
 
 resource "aws_instance" "web" {
-  count         = var.instance_count
-  ami           = "ami-0741dc526e1106ae5"
+
+  count = var.instance_count
+
+  ami = "ami-0741dc526e1106ae5"
+
   instance_type = "t3.micro"
 
   tags = {
     Name = "web-${count.index}"
   }
 }
+```
 
-# 5.String Introduced
-provider "aws" {
-  region = "us-east-1"
-}
+Creates:
 
+```text
+web-0
+web-1
+web-2
+```
+
+---
+
+# 3. String Variable
+
+Example:
+
+```hcl
 variable "instance_type" {
   default = "t2.micro"
 }
+```
 
-resource "aws_instance" "web" {
-  ami           = "ami-0c02fb55956c7d316"
-  instance_type = var.instance_type
+Used:
 
-  tags = {
-    Name = "web-server"
-  }
-}
+```hcl
+instance_type = var.instance_type
+```
 
-# 6. Lists introduced
-Deploy servers in multiple zones
-provider "aws" {
-  region = "us-east-2"
-}
+---
 
+# 4. List Variable
+
+Deploy EC2 instances across multiple Availability Zones.
+
+Example:
+
+```hcl
 variable "availability_zones" {
-  default = [
-    "us-east-2a",
-    "us-east-2b",
-    "us-east-2c"
-  ]
+
+default = [
+
+"us-east-2a",
+"us-east-2b",
+"us-east-2c"
+
+]
+
 }
+```
 
-resource "aws_instance" "web" {
-  count             = length(var.availability_zones)
-  ami               = "ami-0741dc526e1106ae5"
-  instance_type     = "t3.micro"
-  availability_zone = var.availability_zones[count.index]
+---
 
-  tags = {
-    Name = "web-${count.index}"
-  }
-}
+# 5. IAM Users Using List
 
-# 7. List of IAM Users
-provider "aws" {
-  region = "us-east-1"
-}
+Example:
 
+```hcl
 variable "users" {
-  default = [
-    "john",
-    "mary",
-    "david"
-  ]
+
+default = [
+
+"john",
+"mary",
+"david"
+
+]
+
 }
+```
 
-resource "aws_iam_user" "employees" {
-  count = length(var.users)
+Creates multiple IAM users.
 
-  name = var.users[count.index]
-}
+---
 
-# 8. Map Variable
-provider "aws" {
-  region = "us-east-2"
-}
+# 6. Map Variable
 
+Manage different environments.
+
+Example:
+
+```hcl
 variable "instance_types" {
-  default = {
-    dev  = "t3.micro"
-    test = "t3.small"
-    prod = "m7i-flex.large"
-  }
+
+default = {
+
+dev  = "t3.micro"
+
+test = "t3.small"
+
+prod = "m7i-flex.large"
+
 }
 
-resource "aws_instance" "web" {
-  ami           = "ami-0741dc526e1106ae5"
-  instance_type = var.instance_types["prod"]
-
-  tags = {
-    Name = "production-server"
-  }
 }
+```
 
-# 9. Object Variable
-provider "aws" {
-  region = "us-east-2"
-}
+Usage:
 
+```hcl
+instance_type = var.instance_types["prod"]
+```
+
+---
+
+# 7. Object Variable
+
+Store multiple configuration values.
+
+Example:
+
+```hcl
 variable "server_config" {
-  default = {
-    instance_type = "t3.micro"
-    user_name     = "itw"
-  }
+
+default = {
+
+instance_type = "t3.micro"
+
+user_name = "itw"
+
 }
 
-resource "aws_instance" "web" {
-  ami           = "ami-0741dc526e1106ae5"
-  instance_type = var.server_config.instance_type
 }
+```
 
-resource "aws_iam_user" "user" {
-  name = var.server_config.user_name
-}
+Usage:
 
-#0. Set Variable
-provider "aws" {
-  region = "us-east-2"
-}
+```hcl
+var.server_config.instance_type
+```
 
+---
+
+# 8. Set Variable
+
+Removes duplicate values automatically.
+
+Example:
+
+```hcl
 variable "users" {
-  default = [
-    "itw",
-    "itw",
-    "sm",
-    "sm",
-    "ingenious"
-  ]
+
+default = [
+
+"itw",
+"itw",
+"sm",
+"sm",
+"ingenious"
+
+]
+
 }
+```
 
-resource "aws_iam_user" "users" {
-  for_each = toset(var.users)
+Using:
 
-  name = each.value
-}
+```hcl
+for_each = toset(var.users)
+```
 
+Creates unique IAM users.
 
+---
+
+# Terraform Project Structure
+
+The recommended Terraform layout:
+
+```text
 terraform-demo/
+
 ├── provider.tf
+
 ├── variables.tf
+
 ├── terraform.tfvars
+
 ├── main.tf
-└── outputs.tf
 
-## provider.tf
+└── output.tf
+```
+
+---
+
+# Provider Configuration
+
+File:
+
+`provider.tf`
+
+```hcl
 terraform {
-  required_version = ">= 1.0"
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.0"
-    }
-  }
+required_version = ">=1.0"
+
+required_providers {
+
+aws = {
+
+source = "hashicorp/aws"
+
+version = "~>6.0"
+
 }
+
+}
+
+}
+
 
 provider "aws" {
-  region = var.aws_region
-}
 
-## variables.tf
+region = var.aws_region
+
+}
+```
+
+---
+
+# Variables
+
+File:
+
+`variables.tf`
+
+Contains:
+
+* AWS Region
+* Instance Type
+* Instance Name
+* AMI ID
+
+Example:
+
+```hcl
 variable "aws_region" {
-  description = "AWS Region"
-  type        = string
-}
 
-variable "instance_type" {
-  description = "EC2 Instance Type"
-  type        = string
-}
+type = string
 
-variable "instance_name" {
-  description = "EC2 Name"
-  type        = string
 }
+```
 
-variable "ami_id" {
-  description = "Amazon Machine Image ID"
-  type        = string
-}
+---
 
-##terraform.tfvars
-aws_region   = "us-east-2"
+# Terraform Variables Values
+
+File:
+
+`terraform.tfvars`
+
+Example:
+
+```hcl
+aws_region = "us-east-2"
+
 instance_type = "t3.small"
+
 instance_name = "terraform-demo-server"
-ami_id        = "ami-0741dc526e1106ae5"
 
-##main.tf
-resource "aws_instance" "web" {
+ami_id = "ami-0741dc526e1106ae5"
+```
 
-  ami           = var.ami_id
-  instance_type = var.instance_type
+---
 
-  tags = {
-    Name = var.instance_name
-  }
-}
+# Outputs
 
-## outputs.tf
+File:
+
+`output.tf`
+
+Example:
+
+```hcl
 output "instance_id" {
-  value = aws_instance.web.id
+
+value = aws_instance.web.id
+
 }
+
 
 output "public_ip" {
-  value = aws_instance.web.public_ip
+
+value = aws_instance.web.public_ip
+
+}
+```
+
+---
+
+# Lab Challenges
+
+## Challenge 1: Create EC2 With Public IP
+
+Create an EC2 instance:
+
+```hcl
+resource "aws_instance" "web" {
+
+ami = "ami-0741dc526e1106ae5"
+
+instance_type = "t3.micro"
+
+associate_public_ip_address = true
+
+tags = {
+
+Name = "public-server"
+
 }
 
+}
+```
 
+Verify:
 
+```bash
+terraform apply
+```
 
-#validate terraform scripts
-terraform validate
+Check EC2 Public IPv4 address.
 
+---
 
+# Challenge 2: Convert EC2 To Private Instance
 
+Modify:
 
-
-Challenges for lab:
-1. Using terraform create an ec2 with public ip and modify
+```hcl
 associate_public_ip_address = false
+```
 
+Apply:
+
+```bash
+terraform apply
+```
+
+Expected:
+
+* Instance does not receive public IP
+* Instance becomes private
+* Access requires private networking methods
+
+---
+
+# Important Files Ignored
+
+The following files should never be committed:
+
+```text
+.terraform/
+
+*.tfstate
+
+*.tfstate.*
+
+terraform.tfstate.backup
+```
+
+They are excluded using `.gitignore`.
+
+---
+
+# Learning Objectives
+
+After completing this lab, you will understand:
+
+✅ Terraform installation
+✅ AWS provider configuration
+✅ EC2 provisioning
+✅ IAM resources
+✅ Terraform variables
+✅ Count and loops
+✅ Lists and Maps
+✅ Object and Set variables
+✅ Terraform project structure
+✅ Terraform state management
+✅ Infrastructure lifecycle management
+
+---
+
+# Author
+
+Terraform AWS DevOps Lab
+
+Repository:
+
+`TerraformDevOps`
